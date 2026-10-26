@@ -23,12 +23,12 @@
         #main-layout { display: none; height: 100dvh; width: 100vw; overflow: hidden; }
         #sidebar { transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1); width: 16.5rem; will-change: transform; }
         
-        /* Menu Navigasi Segar */
-        .nav-item { cursor: pointer; transition: all 0.15s ease; border-radius: 0.75rem; margin-bottom: 0.25rem; font-weight: 600; font-size: 0.85rem; color: #475569; }
-        .nav-item:hover { background-color: #f1f5f9; color: #4f46e5; transform: translateX(3px); }
-        .nav-item.active { background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: #ffffff !important; font-weight: 700; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); }
+       /* Menu Navigasi Segar & Profesional */
+        .nav-item { cursor: pointer; transition: all 0.2s ease; border-radius: 0.85rem; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem; color: #64748b; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.75rem; border: 1px solid transparent; }
+        .nav-item:hover { background-color: #f8fafc; color: #4f46e5; border-color: #f1f5f9; }
+        .nav-item.active { background: #4f46e5; color: #ffffff !important; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3); border-color: #4f46e5; }
         .nav-item.active i { color: #ffffff !important; }
-        .nav-item i { width: 24px; text-align: center; transition: color 0.15s; color: #94a3b8; }
+        .nav-item i { width: 24px; text-align: center; font-size: 1.1rem; color: #94a3b8; transition: color 0.2s; }
         .nav-item:hover i { color: #4f46e5; }
         
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -178,117 +178,116 @@
         <!-- Backdrop Gelap Khusus Layar HP -->
         <div id="sidebar-backdrop" onclick="toggleSidebar()"></div>
 
-        <!-- SIDEBAR MODERN -->
-        <aside id="sidebar" class="bg-white h-full border-r border-slate-200/80 flex flex-col fixed md:relative z-30 transform -translate-x-full md:translate-x-0 shrink-0 select-none">
-            <div class="p-5 flex flex-col gap-3 border-b border-slate-100">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-tr from-indigo-600 to-blue-500 text-white rounded-xl flex items-center justify-center text-lg shadow-md"><i class="fas fa-chart-pie"></i></div>
+      <!-- SIDEBAR MODERN & PROFESIONAL -->
+        <aside id="sidebar" class="bg-white h-full border-r border-slate-100 flex flex-col fixed md:relative z-30 transform -translate-x-full md:translate-x-0 shrink-0 select-none w-[17rem]">
+            <div class="p-6 flex flex-col gap-4 border-b border-slate-50">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-11 h-11 bg-[#4f46e5] text-white rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-indigo-500/30 shrink-0"><i class="fas fa-chart-pie"></i></div>
                     <div>
-                        <span class="font-extrabold text-lg text-slate-800 tracking-tight block leading-none">MarginApp</span>
-                        <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full inline-block mt-1">PRO 2.0</span>
+                        <span class="font-extrabold text-lg text-slate-800 tracking-tight block leading-tight">MarginApp</span>
+                        <span class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full inline-block uppercase tracking-widest mt-0.5">PRO 2.0</span>
                     </div>
                     <button class="md:hidden text-slate-400 hover:text-slate-700 ml-auto w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
                 </div>
-                <button onclick="refreshDataServer()" id="btn-sync- data" class="w-full mt-1 flex items-center justify-center gap-2 bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-600 py-2.5 rounded-xl text-xs font-extrabold transition">
+                <button onclick="refreshDataServer()" id="btn-sync-data" class="w-full flex items-center justify-center gap-2 bg-[#f5f3ff] hover:bg-[#ede9fe] active:scale-95 text-[#4f46e5] py-2.5 rounded-xl text-xs font-bold transition border border-[#ede9fe]">
                     <i class="fas fa-sync-alt" id="sync-icon"></i> Sinkronisasi Cloud
                 </button>
             </div>
             
-            <div class="flex-1 overflow-y-auto py-3 px-3.5 space-y-0.5">
-                <a class="nav-item flex items-center gap-3 px-3.5 py-3 active" onclick="nav('dashboard')"><i class="fas fa-th-large"></i> Dashboard</a>
+            <div class="flex-1 overflow-y-auto py-4 px-4">
+                <a class="nav-item active" onclick="nav('dashboard')"><i class="fas fa-th-large"></i> Dashboard</a>
                 
-                <div class="px-3 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-5 mb-1.5">Master Data</div>
-                <a class="nav-item flex items-center gap-3 px-3.5 py-2.5" onclick="nav('barang')"><i class="fas fa-box-archive"></i> Data Barang</a>
-                <a class="nav-item flex items-center gap-3 px-3.5 py-2.5" onclick="nav('dapur')"><i class="fas fa-utensils"></i> Data Dapur MBG</a>
-                <a class="nav-item flex items-center gap-3 px-3.5 py-2.5" onclick="nav('perusahaan')"><i class="fas fa-building"></i> Data Perusahaan</a>
+                <div class="px-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-6 mb-2">Master Data</div>
+                <a class="nav-item" onclick="nav('barang')"><i class="fas fa-box-archive"></i> Data Barang</a>
+                <a class="nav-item" onclick="nav('dapur')"><i class="fas fa-utensils"></i> Data Dapur MBG</a>
+                <a class="nav-item" onclick="nav('perusahaan')"><i class="fas fa-building"></i> Data Perusahaan</a>
 
-                <div class="px-3 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-5 mb-1.5">Transaksi</div>
-                <a class="nav-item flex items-center gap-3 px-3.5 py-2.5" onclick="nav('simulasi')"><i class="fas fa-calculator"></i> Simulasi Harga</a>
-                <a class="nav-item flex items-center gap-3 px-3.5 py-2.5" onclick="nav('kasir')"><i class="fas fa-cash-register"></i> Kasir Checkout</a>
+                <div class="px-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-6 mb-2">Transaksi</div>
+                <a class="nav-item" onclick="nav('simulasi')"><i class="fas fa-calculator"></i> Simulasi Harga</a>
+                <a class="nav-item" onclick="nav('kasir')"><i class="fas fa-cash-register"></i> Kasir Checkout</a>
 
-                <div class="px-3 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-5 mb-1.5">Laporan & Kas</div>
-                <a class="nav-item flex items-center gap-3 px-3.5 py-2.5" onclick="nav('arsip')"><i class="fas fa-folder-open"></i> Arsip Invoice</a>
-                <a class="nav-item flex items-center gap-3 px-3.5 py-2.5" onclick="nav('laporan-lengkap')"><i class="fas fa-chart-line"></i> Laporan Lengkap</a>
-                <a class="nav-item flex items-center gap-3 px-3.5 py-2.5" onclick="nav('laporan-dapur')"><i class="fas fa-fire-burner"></i> Laporan Dapur</a>
-                <a class="nav-item flex items-center gap-3 px-3.5 py-2.5" onclick="nav('buku-kas')"><i class="fas fa-wallet"></i> Buku Kas</a>
+                <div class="px-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-6 mb-2">Laporan & Kas</div>
+                <a class="nav-item" onclick="nav('arsip')"><i class="fas fa-folder-open"></i> Arsip Invoice</a>
+                <a class="nav-item" onclick="nav('laporan-lengkap')"><i class="fas fa-chart-line"></i> Laporan Lengkap</a>
+                <a class="nav-item" onclick="nav('laporan-dapur')"><i class="fas fa-fire-burner"></i> Laporan Dapur</a>
+                <a class="nav-item" onclick="nav('buku-kas')"><i class="fas fa-wallet"></i> Buku Kas</a>
 
-                <div class="px-3 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-5 mb-1.5">Sistem</div>
-                <a class="nav-item flex items-center gap-3 px-3.5 py-2.5" onclick="nav('akun')"><i class="fas fa-sliders"></i> Pengaturan</a>
+                <div class="px-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-6 mb-2">Sistem</div>
+                <a class="nav-item" onclick="nav('akun')"><i class="fas fa-sliders"></i> Pengaturan</a>
             </div>
             
-            <div class="p-3.5 border-t border-slate-100 bg-slate-50/50">
-                <button onclick="doLogout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition text-xs font-extrabold"><i class="fas fa-power-off"></i> Keluar Aplikasi</button>
+            <div class="p-4 border-t border-slate-50 bg-white">
+                <button onclick="doLogout()" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-[#e11d48] bg-[#fff1f2] hover:bg-[#ffe4e6] rounded-xl transition text-xs font-bold"><i class="fas fa-power-off"></i> Keluar Aplikasi</button>
             </div>
         </aside>
 
         <!-- MAIN CONTENT AREA -->
-        <main class="flex-1 flex flex-col h-full w-full overflow-hidden relative">
-            <!-- HEADER RESPONSIF -->
-            <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 h-16 sm:h-[70px] flex items-center justify-between px-4 sm:px-6 z-10 w-full shrink-0">
-                <div class="flex items-center gap-3">
+        <main class="flex-1 flex flex-col h-full w-full overflow-hidden relative bg-[#f8fafc]">
+            <!-- HEADER RESPONSIF & ELEGAN -->
+            <header class="bg-white/80 backdrop-blur-md border-b border-slate-200/50 h-[76px] flex items-center justify-between px-6 z-10 w-full shrink-0">
+                <div class="flex items-center gap-4">
                     <button class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 flex items-center justify-center text-lg transition active:scale-95" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
                     <div>
-                        <h2 class="text-base sm:text-xl font-extrabold text-slate-800 tracking-tight leading-tight" id="page-title">Dashboard</h2>
-                        <div class="text-[11px] text-slate-400 sm:hidden font-semibold" id="current-date-mobile"></div>
+                        <h2 class="text-xl font-extrabold text-slate-800 tracking-tight" id="page-title">Dashboard</h2>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <div class="text-xs text-slate-500 hidden sm:flex items-center gap-2 font-semibold bg-slate-100 px-3.5 py-2 rounded-xl"><i class="far fa-calendar-alt text-indigo-500"></i> <span id="current-date"></span></div>
-                    <div onclick="nav('akun')" class="flex items-center gap-2.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 px-3 sm:px-4 py-1.5 rounded-xl cursor-pointer transition">
-                        <div class="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs font-bold"><i class="fas fa-user"></i></div>
-                        <span class="text-xs sm:text-sm font-extrabold text-indigo-950 max-w-[100px] sm:max-w-none truncate" id="user-name-display">Admin</span>
+                    <div class="text-xs text-[#4f46e5] hidden sm:flex items-center gap-2 font-bold bg-[#f5f3ff] px-4 py-2.5 rounded-xl border border-[#ede9fe]"><i class="far fa-calendar-alt"></i> <span id="current-date"></span></div>
+                    <div onclick="nav('akun')" class="flex items-center gap-2.5 bg-[#4f46e5] hover:bg-[#4338ca] text-white px-4 py-2.5 rounded-xl cursor-pointer transition shadow-md shadow-indigo-500/20">
+                        <i class="fas fa-user-circle text-lg"></i>
+                        <span class="text-xs font-bold truncate max-w-[120px]" id="user-name-display">Super Administrator</span>
                     </div>
                 </div>
             </header>
 
             <!-- CONTAINER HALAMAN -->
-            <div class="flex-1 overflow-hidden relative w-full p-3 sm:p-6">
+            <div class="flex-1 overflow-hidden relative w-full p-4 sm:p-6 lg:p-8">
                 
                 <!-- 1. DASHBOARD -->
-                <div id="page-dashboard" class="page-content active">
-                    <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end justify-between mb-6 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-                        <div class="grid grid-cols-2 sm:flex gap-3 items-end">
+                <div id="page-dashboard" class="page-content active !p-0">
+                    <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-end justify-between mb-6 bg-white p-5 rounded-[1.25rem] border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+                        <div class="grid grid-cols-2 sm:flex gap-5 items-end">
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-500 mb-1">Dari Tanggal</label>
-                                <input type="date" id="dash-start" class="input-outline !text-xs !py-2 sm:w-40" onchange="renderDashboard()">
+                                <label class="block text-[11px] font-bold text-[#64748b] mb-2 uppercase tracking-wide">Dari Tanggal</label>
+                                <input type="date" id="dash-start" class="input-outline !text-xs !py-2.5 !px-4 sm:w-44 !bg-slate-50 !rounded-xl" onchange="renderDashboard()">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-500 mb-1">Sampai Tanggal</label>
-                                <input type="date" id="dash-end" class="input-outline !text-xs !py-2 sm:w-40" onchange="renderDashboard()">
+                                <label class="block text-[11px] font-bold text-[#64748b] mb-2 uppercase tracking-wide">Sampai Tanggal</label>
+                                <input type="date" id="dash-end" class="input-outline !text-xs !py-2.5 !px-4 sm:w-44 !bg-slate-50 !rounded-xl" onchange="renderDashboard()">
                             </div>
                         </div>
-                        <button id="btn-lock-dash" onclick="promptPin()" class="bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold shadow hover:bg-slate-900 transition flex items-center justify-center gap-2">
+                        <button id="btn-lock-dash" onclick="promptPin()" class="bg-[#1e293b] text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-black transition flex items-center justify-center gap-2 h-[42px]">
                             <i class="fas fa-lock"></i> Buka Kunci Keuangan
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-6">
-                        <div class="card-panel p-5 flex justify-between items-center border-l-4 border-l-indigo-500">
-                            <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Total Transaksi</p><h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800" id="dash-trx">0</h3></div>
-                            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-xl shrink-0"><i class="fas fa-receipt"></i></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+                        <div class="bg-white p-6 rounded-[1.25rem] shadow-[0_4px_15px_-5px_rgba(0,0,0,0.05)] border border-slate-100 border-l-[5px] border-l-[#6366f1] flex justify-between items-center relative overflow-hidden">
+                            <div><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1.5">Total Transaksi</p><h3 class="text-3xl font-black text-slate-800" id="dash-trx">0</h3></div>
+                            <div class="w-12 h-12 bg-[#eef2ff] text-[#6366f1] rounded-2xl flex items-center justify-center text-xl shrink-0"><i class="fas fa-receipt"></i></div>
                         </div>
-                        <div class="card-panel p-5 flex justify-between items-center border-l-4 border-l-blue-500">
-                            <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Margin Kotor</p><h3 class="text-xl sm:text-2xl font-extrabold text-blue-600" id="dash-kotor">Rp ***</h3></div>
-                            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl shrink-0"><i class="fas fa-coins"></i></div>
+                        <div class="bg-white p-6 rounded-[1.25rem] shadow-[0_4px_15px_-5px_rgba(0,0,0,0.05)] border border-slate-100 border-l-[5px] border-l-[#3b82f6] flex justify-between items-center relative overflow-hidden">
+                            <div><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1.5">Margin Kotor</p><h3 class="text-2xl font-black text-[#3b82f6]" id="dash-kotor">Rp ***</h3></div>
+                            <div class="w-12 h-12 bg-[#eff6ff] text-[#3b82f6] rounded-2xl flex items-center justify-center text-xl shrink-0"><i class="fas fa-coins"></i></div>
                         </div>
-                        <div class="card-panel p-5 flex justify-between items-center border-l-4 border-l-rose-500">
-                            <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Total Biaya Ops</p><h3 class="text-xl sm:text-2xl font-extrabold text-rose-500" id="dash-ops">Rp ***</h3></div>
-                            <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center text-xl shrink-0"><i class="fas fa-arrow-trend-down"></i></div>
+                        <div class="bg-white p-6 rounded-[1.25rem] shadow-[0_4px_15px_-5px_rgba(0,0,0,0.05)] border border-slate-100 border-l-[5px] border-l-[#ef4444] flex justify-between items-center relative overflow-hidden">
+                            <div><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1.5">Total Biaya Ops</p><h3 class="text-2xl font-black text-[#ef4444]" id="dash-ops">Rp ***</h3></div>
+                            <div class="w-12 h-12 bg-[#fef2f2] text-[#ef4444] rounded-2xl flex items-center justify-center text-xl shrink-0"><i class="fas fa-arrow-trend-down"></i></div>
                         </div>
-                        <div class="p-5 rounded-2xl shadow-lg flex justify-between items-center text-white" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
-                            <div><p class="text-xs text-emerald-100 font-bold uppercase tracking-wider mb-1">Keuntungan Bersih</p><h3 class="text-xl sm:text-2xl font-extrabold text-white" id="dash-bersih">Rp ***</h3></div>
-                            <div class="w-12 h-12 bg-white/20 text-white rounded-2xl flex items-center justify-center text-xl backdrop-blur-sm shrink-0"><i class="fas fa-wallet"></i></div>
+                        <div class="p-6 rounded-[1.25rem] shadow-[0_10px_20px_-5px_rgba(16,185,129,0.3)] flex justify-between items-center text-white relative overflow-hidden bg-[#10b981]">
+                            <div class="relative z-10"><p class="text-[10px] font-extrabold text-[#d1fae5] uppercase tracking-widest mb-1.5">Keuntungan Bersih</p><h3 class="text-2xl font-black text-white" id="dash-bersih">Rp ***</h3></div>
+                            <div class="w-12 h-12 bg-white/20 text-white rounded-2xl flex items-center justify-center text-xl backdrop-blur-md shrink-0 relative z-10"><i class="fas fa-wallet"></i></div>
                         </div>
                     </div>
 
-                    <div class="card-panel p-4 sm:p-6 relative">
-                        <h3 class="font-extrabold text-slate-800 mb-4 flex items-center text-sm sm:text-base"><i class="fas fa-chart-area text-indigo-500 mr-2.5"></i> Grafik Keuntungan Bersih</h3>
-                        <div id="chart-locked-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-2xl">
-                            <div class="w-14 h-14 bg-slate-100 text-slate-500 rounded-2xl flex items-center justify-center text-2xl mb-2"><i class="fas fa-lock"></i></div>
-                            <p class="font-extrabold text-slate-700 text-sm">Grafik Keuangan Terkunci</p>
-                            <button onclick="promptPin()" class="mt-3 text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl hover:bg-indigo-100">Buka dengan PIN</button>
+                    <div class="bg-white rounded-[1.25rem] border border-slate-100 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] p-6 sm:p-8 relative">
+                        <h3 class="font-extrabold text-slate-800 mb-6 flex items-center text-base"><i class="fas fa-chart-area text-indigo-500 mr-2.5"></i> Grafik Keuntungan Bersih</h3>
+                        <div id="chart-locked-overlay" class="absolute inset-0 bg-white/70 backdrop-blur-md z-10 flex flex-col items-center justify-center rounded-[1.25rem]">
+                            <div class="w-16 h-16 bg-slate-100 text-slate-500 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-inner"><i class="fas fa-lock"></i></div>
+                            <p class="font-extrabold text-slate-800 text-base">Grafik Keuangan Terkunci</p>
+                            <button onclick="promptPin()" class="mt-4 text-xs font-bold text-[#4f46e5] bg-[#f5f3ff] px-6 py-2.5 rounded-xl hover:bg-[#ede9fe] border border-[#ede9fe] transition">Buka dengan PIN</button>
                         </div>
-                        <div class="h-[260px] sm:h-[340px] w-full"><canvas id="chart-profit"></canvas></div>
+                        <div class="h-[280px] sm:h-[360px] w-full"><canvas id="chart-profit"></canvas></div>
                     </div>
                 </div>
 
