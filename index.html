@@ -1337,26 +1337,97 @@ function renderKasirList(filterText) {
     }
 
     function getInvoiceTemplate(tIndex, perus, t, items, subT, invoiceGrandTotal, meta, dpNama) {
-        const mappedIndex = (tIndex * 17) % 50;
-        const headerType = mappedIndex % 10; const tableType = Math.floor(mappedIndex / 10) % 5;
-        const fontFamilies = ["'Inter', sans-serif", "'Georgia', serif", "'Courier New', monospace", "'Trebuchet MS', sans-serif", "'Times New Roman', serif"];
-        const fontFam = fontFamilies[tIndex % 5];
-        const hue = (tIndex * 137.5) % 360; const cMain = `hsl(${hue}, 75%, 25%)`; const cLight = `hsl(${hue}, 30%, 95%)`; const cAccent = `hsl(${(hue + 45) % 360}, 80%, 40%)`; const cBorder = `hsl(${hue}, 20%, 80%)`; const cDark = `hsl(${hue}, 80%, 15%)`;
-
-        const renderTableItems = (borderStyle, isStriped) => items.map((d, i) => `<tr style="${isStriped && i%2===1 ? `background-color: ${cLight};` : ''} ${borderStyle}"><td class="py-3 px-4 text-sm font-bold text-gray-800">${d.nama}</td><td class="py-3 px-4 text-sm text-center font-bold" style="color:${cMain};">${d.qty} <span class="text-xs text-gray-400 font-normal">${d.satuan || ''}</span></td><td class="py-3 px-4 text-sm text-right text-gray-600">${rp(d.jual)}</td><td class="py-3 px-4 text-sm text-right font-black" style="color:${cDark};">${rp(d.jual*d.qty)}</td></tr>`).join('');
-
-        const headersHTML = [
-            /* 0: Standard L-R */ `<div class="flex justify-between items-start border-b-[3px] pb-6 mb-8 mt-4" style="border-bottom-color: ${cMain} !important;"><div class="w-1/2"><h1 class="text-3xl font-black uppercase tracking-tight mb-2" style="color: ${cMain} !important;">${perus.nama}</h1><p class="text-sm text-gray-600">${perus.alamat}</p><p class="text-sm font-bold mt-1" style="color: ${cAccent};">${perus.telp}</p></div><div class="text-right w-1/2"><h2 class="text-5xl font-black uppercase tracking-widest text-white px-4 py-2 inline-block rounded" style="background-color: ${cMain} !important;">INVOICE</h2><div class="mt-4"><p class="text-sm font-bold" style="color: ${cMain};">NO: ${t.id}</p><p class="text-xs font-bold" style="color: ${cMain};">DATE: ${formatDate(t.tanggal)}</p></div></div></div>`,
-            /* 1: Centered Logo */ `<div class="text-center border-b-4 pb-6 mb-8 mt-4" style="border-bottom-color: ${cMain} !important;"><h1 class="text-4xl font-black uppercase tracking-tight mb-2" style="color: ${cMain} !important;">${perus.nama}</h1><p class="text-sm text-gray-600">${perus.alamat} | Telp: ${perus.telp}</p><div class="mt-6"><h2 class="text-3xl font-black uppercase px-6 py-1 rounded-full text-white inline-block" style="background-color: ${cAccent} !important;">INVOICE</h2><div class="mt-2 text-sm font-bold"><span style="color: ${cMain};">NO: ${t.id}</span> <span class="mx-2">|</span> <span style="color: ${cMain};">TGL: ${formatDate(t.tanggal)}</span></div></div></div>`,
-            /* 2: Boxed Split */ `<div class="border-[4px] p-6 mb-8 mt-4 flex justify-between items-center" style="border-color: ${cMain} !important; background-color: ${cLight} !important;"><div class="w-2/3"><h1 class="text-4xl font-black uppercase tracking-tight" style="color: ${cMain} !important;">${perus.nama}</h1><p class="text-sm font-bold mt-2" style="color: ${cAccent} !important;">${perus.alamat}</p></div><div class="w-1/3 text-right"><h2 class="text-5xl font-black uppercase tracking-widest" style="color: ${cAccent} !important;">INVOICE</h2><p class="text-sm font-black mt-2" style="color: ${cMain} !important;">${t.id}</p><p class="text-sm font-bold" style="color: ${cMain} !important;">${formatDate(t.tanggal)}</p></div></div>`,
-            /* 3: Accent Block L */ `<div class="flex justify-between items-center mb-8 mt-4"><div class="w-1/2 border-l-8 pl-4" style="border-left-color: ${cMain} !important;"><h1 class="text-3xl font-black uppercase tracking-tight" style="color: ${cMain} !important;">${perus.nama}</h1><p class="text-sm text-gray-600 mt-2">${perus.alamat}</p><p class="text-sm font-bold mt-1" style="color: ${cAccent} !important;">${perus.telp}</p></div><div class="w-1/2 text-right"><div class="inline-block p-4 shadow-md text-white" style="background-color: ${cMain} !important;"><h2 class="text-4xl font-black uppercase tracking-widest">INVOICE</h2></div><div class="mt-4"><p class="text-sm font-bold text-gray-800">NO. <span style="color: ${cMain};">${t.id}</span></p><p class="text-sm font-bold text-gray-800">TGL. <span style="color: ${cMain};">${formatDate(t.tanggal)}</span></p></div></div></div>`,
-            /* 4: Banner Top */ `<div class="mb-8 mt-4 p-8 text-white rounded-t-xl" style="background-color: ${cMain} !important; margin-left:-2rem; margin-right:-2rem; margin-top:-2rem;"><div class="flex justify-between"><div class="w-1/2"><h1 class="text-4xl font-black uppercase tracking-tight">${perus.nama}</h1><p class="text-sm mt-2 opacity-90">${perus.alamat}</p></div><div class="text-right"><h2 class="text-4xl font-black uppercase tracking-widest text-white opacity-50">INVOICE</h2><p class="text-sm font-bold mt-4">NO: ${t.id}</p><p class="text-sm font-bold">DATE: ${formatDate(t.tanggal)}</p></div></div></div>`,
-            /* 5: Modern Rounded */ `<div class="flex justify-between items-center mb-8 mt-4 bg-gray-50 p-6 rounded-3xl border" style="border-color:${cBorder};"><div class="w-1/2"><h2 class="text-3xl font-black uppercase tracking-widest px-6 py-2 rounded-2xl text-white inline-block" style="background-color: ${cAccent} !important;">INVOICE</h2><div class="mt-4 pl-2"><p class="text-sm font-bold" style="color: ${cDark};">ID: ${t.id}</p><p class="text-xs font-bold" style="color: ${cMain};">${formatDate(t.tanggal)}</p></div></div><div class="w-1/2 text-right"><h1 class="text-2xl font-black uppercase tracking-tight mb-2" style="color: ${cMain} !important;">${perus.nama}</h1><p class="text-xs text-gray-600">${perus.alamat}</p></div></div>`,
-            /* 6: Minimalist Line */ `<div class="flex justify-between items-end mb-8 mt-4 border-b pb-2" style="border-color:${cBorder} !important;"><div class="w-1/2"><h1 class="text-2xl font-black uppercase tracking-tight" style="color: ${cDark} !important;">${perus.nama}</h1></div><div class="text-right w-1/2"><h2 class="text-3xl font-black uppercase tracking-widest" style="color: ${cMain} !important;">INVOICE</h2><p class="text-[10px] font-mono mt-1">${t.id} - ${formatDate(t.tanggal)}</p></div></div><div class="mb-8 text-xs text-gray-600 w-1/2">${perus.alamat} | ${perus.telp}</div>`,
-            /* 7: Split 50/50 Bg */ `<div class="flex mb-8 mt-4"><div class="w-1/2 p-8 text-white rounded-l-xl" style="background-color: ${cMain} !important;"><h2 class="text-4xl font-black uppercase tracking-widest mb-4">INVOICE</h2><p class="text-sm">NO: ${t.id}</p><p class="text-sm">DATE: ${formatDate(t.tanggal)}</p></div><div class="w-1/2 p-8 rounded-r-xl text-right" style="background-color: ${cLight} !important;"><h1 class="text-3xl font-black uppercase tracking-tight mb-2" style="color: ${cMain} !important;">${perus.nama}</h1><p class="text-sm text-gray-600">${perus.alamat}</p></div></div>`,
-            /* 8: Floating Badges */ `<div class="mb-10 mt-4 relative pt-10"><div class="absolute top-0 right-0 bg-white shadow-lg border px-6 py-2 rounded-bl-3xl" style="border-color:${cBorder};"><h2 class="text-3xl font-black uppercase tracking-widest" style="color: ${cMain} !important;">INVOICE</h2></div><h1 class="text-4xl font-black uppercase tracking-tight" style="color: ${cDark} !important;">${perus.nama}</h1><p class="text-sm text-gray-600 mt-2 max-w-md">${perus.alamat}</p><div class="mt-4 inline-block border-l-4 pl-4 py-1" style="border-color:${cAccent};"><p class="text-sm font-bold">INV: ${t.id}</p><p class="text-sm font-bold">TGL: ${formatDate(t.tanggal)}</p></div></div>`,
-            /* 9: Double Underline */ `<div class="text-center mb-8 mt-4"><h1 class="text-4xl font-black uppercase tracking-widest" style="color: ${cMain} !important;">${perus.nama}</h1><p class="text-sm text-gray-500 mt-1">${perus.alamat}</p><div class="mt-6 border-y-4 py-2" style="border-color: ${cAccent} !important;"><div class="flex justify-between items-center px-10"><p class="font-bold">NO. ${t.id}</p><h2 class="text-3xl font-black uppercase tracking-widest" style="color: ${cDark} !important;">INVOICE</h2><p class="font-bold">TGL. ${formatDate(t.tanggal)}</p></div></div></div>`
+        // Kunci index ke 25 template yang benar-benar berbeda
+        const id = Math.abs(tIndex) % 25;
+        
+        // 25 Kombinasi Template Super Unik (100% Beda Layout, Warna, & Orientasi)
+        const configs = [
+            { o:'portrait',  t:'blue',   f:'font-sans',  h:'split',      tb:'rounded' },
+            { o:'landscape', t:'bw',     f:'font-serif', h:'center',     tb:'bordered' },
+            { o:'portrait',  t:'red',    f:'font-mono',  h:'rightBlock', tb:'dashed' },
+            { o:'landscape', t:'green',  f:'font-sans',  h:'banner',     tb:'striped' },
+            { o:'portrait',  t:'purple', f:'font-serif', h:'leftBlock',  tb:'minimal' },
+            { o:'landscape', t:'blue',   f:'font-serif', h:'leftBlock',  tb:'bordered' },
+            { o:'portrait',  t:'bw',     f:'font-mono',  h:'banner',     tb:'rounded' },
+            { o:'landscape', t:'red',    f:'font-sans',  h:'center',     tb:'minimal' },
+            { o:'portrait',  t:'green',  f:'font-serif', h:'split',      tb:'dashed' },
+            { o:'landscape', t:'purple', f:'font-mono',  h:'rightBlock', tb:'striped' },
+            { o:'portrait',  t:'blue',   f:'font-mono',  h:'center',     tb:'striped' },
+            { o:'landscape', t:'bw',     f:'font-sans',  h:'rightBlock', tb:'minimal' },
+            { o:'portrait',  t:'red',    f:'font-serif', h:'banner',     tb:'bordered' },
+            { o:'landscape', t:'green',  f:'font-mono',  h:'leftBlock',  tb:'rounded' },
+            { o:'portrait',  t:'purple', f:'font-sans',  h:'split',      tb:'dashed' },
+            { o:'landscape', t:'blue',   f:'font-sans',  h:'banner',     tb:'dashed' },
+            { o:'portrait',  t:'bw',     f:'font-serif', h:'split',      tb:'striped' },
+            { o:'landscape', t:'red',    f:'font-mono',  h:'leftBlock',  tb:'rounded' },
+            { o:'portrait',  t:'green',  f:'font-sans',  h:'rightBlock', tb:'bordered' },
+            { o:'landscape', t:'purple', f:'font-serif', h:'center',     tb:'minimal' },
+            { o:'portrait',  t:'blue',   f:'font-serif', h:'rightBlock', tb:'minimal' },
+            { o:'landscape', t:'bw',     f:'font-mono',  h:'leftBlock',  tb:'dashed' },
+            { o:'portrait',  t:'red',    f:'font-sans',  h:'split',      tb:'striped' },
+            { o:'landscape', t:'green',  f:'font-serif', h:'center',     tb:'rounded' },
+            { o:'portrait',  t:'purple', f:'font-mono',  h:'banner',     tb:'bordered' }
         ];
+
+        const conf = configs[id];
+
+        // Konfigurasi 5 Tema Warna (Termasuk Hitam Putih / Tanpa Warna)
+        const colors = {
+            blue:   { main: 'text-blue-700', bgMain: 'bg-blue-600', border: 'border-blue-600', light: 'bg-blue-50', textLight: 'text-blue-100', accent: 'text-blue-500' },
+            bw:     { main: 'text-black', bgMain: 'bg-black', border: 'border-black', light: 'bg-gray-100', textLight: 'text-gray-300', accent: 'text-gray-600' },
+            red:    { main: 'text-red-700', bgMain: 'bg-red-600', border: 'border-red-600', light: 'bg-red-50', textLight: 'text-red-100', accent: 'text-red-500' },
+            green:  { main: 'text-emerald-700', bgMain: 'bg-emerald-600', border: 'border-emerald-600', light: 'bg-emerald-50', textLight: 'text-emerald-100', accent: 'text-emerald-500' },
+            purple: { main: 'text-purple-700', bgMain: 'bg-purple-600', border: 'border-purple-600', light: 'bg-purple-50', textLight: 'text-purple-100', accent: 'text-purple-500' }
+        };
+        const c = colors[conf.t];
+
+        // 5 Konfigurasi Layout Header UI yang berbeda total
+        const headers = {
+            split: `<div class="flex justify-between items-end border-b-4 ${c.border} pb-6 mb-8"><div class="w-1/2"><h1 class="text-4xl font-black uppercase ${c.main}">${perus.nama}</h1><p class="text-sm mt-2">${perus.alamat}</p><p class="text-sm font-bold ${c.accent}">${perus.telp}</p></div><div class="text-right w-1/2"><h2 class="text-5xl font-black uppercase tracking-widest ${c.main}">INVOICE</h2><p class="font-bold mt-2">NO: ${t.id}</p><p class="text-sm">DATE: ${formatDate(t.tanggal)}</p></div></div>`,
+            center: `<div class="text-center border-b-2 ${c.border} pb-6 mb-8"><h1 class="text-5xl font-black uppercase tracking-[0.2em] ${c.main}">${perus.nama}</h1><p class="mt-2 text-sm uppercase">${perus.alamat} | ${perus.telp}</p><div class="mt-6"><h2 class="text-3xl font-black uppercase inline-block px-6 py-2 ${c.bgMain} text-white shadow-md">INVOICE</h2><p class="font-bold mt-3">NO: ${t.id} | DATE: ${formatDate(t.tanggal)}</p></div></div>`,
+            leftBlock: `<div class="flex mb-8 rounded-xl overflow-hidden shadow-sm border ${c.border}"><div class="w-1/2 p-8 ${c.bgMain} text-white"><h2 class="text-5xl font-black uppercase mb-4">INVOICE</h2><p class="font-bold">NO: ${t.id}</p><p>DATE: ${formatDate(t.tanggal)}</p></div><div class="w-1/2 p-8 ${c.light} text-right"><h1 class="text-3xl font-black uppercase ${c.main}">${perus.nama}</h1><p class="text-sm mt-2 text-gray-700">${perus.alamat}</p><p class="text-sm font-bold mt-1 text-gray-800">${perus.telp}</p></div></div>`,
+            rightBlock: `<div class="flex justify-between mb-8"><div class="w-1/2 border-l-8 ${c.border} pl-6 py-2"><h1 class="text-4xl font-black uppercase ${c.main}">${perus.nama}</h1><p class="text-sm mt-2 text-gray-600">${perus.alamat}</p><p class="text-sm font-bold mt-1 ${c.accent}">${perus.telp}</p></div><div class="w-1/2 text-right"><div class="inline-block p-4 ${c.bgMain} text-white shadow-lg"><h2 class="text-4xl font-black uppercase tracking-widest">INVOICE</h2></div><p class="font-bold mt-4 text-gray-800">NO: ${t.id}</p><p class="text-gray-600">DATE: ${formatDate(t.tanggal)}</p></div></div>`,
+            banner: `<div class="-mx-8 -mt-8 mb-8 p-10 ${c.bgMain} text-white flex justify-between items-center"><div class="w-1/2"><h1 class="text-4xl font-black uppercase">${perus.nama}</h1><p class="text-sm mt-2 ${c.textLight}">${perus.alamat} | ${perus.telp}</p></div><div class="text-right"><h2 class="text-4xl font-black uppercase tracking-widest opacity-80">INVOICE</h2><p class="font-bold mt-2">NO: ${t.id}</p><p class="text-sm text-gray-200">DATE: ${formatDate(t.tanggal)}</p></div></div>`
+        };
+
+        // Pembuat Item Baris Tabel
+        const tableItem = (rowCls, tdCls) => items.map((d,i) => `<tr class="${rowCls} ${i%2===1 && conf.tb==='striped' ? c.light : ''}"><td class="${tdCls} font-bold">${d.nama}</td><td class="text-center ${tdCls}">${d.qty} <span class="text-[10px] text-gray-500">${d.satuan||''}</span></td><td class="text-right ${tdCls}">${rp(d.jual)}</td><td class="text-right font-black ${tdCls}">${rp(d.jual*d.qty)}</td></tr>`).join('');
+        
+        // 5 Konfigurasi UX Tabel yang berbeda total
+        const tables = {
+            rounded: `<table class="w-full text-left mb-8 border-separate" style="border-spacing:0 0.5rem;"><thead class="${c.light} ${c.main} shadow-sm"><tr><th class="p-4 rounded-l-full uppercase text-xs font-black">Description</th><th class="p-4 text-center uppercase text-xs font-black">Qty</th><th class="p-4 text-right uppercase text-xs font-black">Price</th><th class="p-4 text-right rounded-r-full uppercase text-xs font-black">Total</th></tr></thead><tbody>${tableItem('shadow-sm bg-white border border-gray-50','p-4')}</tbody></table>`,
+            bordered: `<table class="w-full text-left mb-8 border-collapse border-4 ${c.border}"><thead class="${c.bgMain} text-white"><tr><th class="p-3 border ${c.border} uppercase text-xs font-black">Description</th><th class="p-3 border ${c.border} text-center uppercase text-xs font-black">Qty</th><th class="p-3 border ${c.border} text-right uppercase text-xs font-black">Price</th><th class="p-3 border ${c.border} text-right uppercase text-xs font-black">Total</th></tr></thead><tbody>${tableItem('hover:bg-gray-50', `p-3 border ${c.border}`)}</tbody></table>`,
+            dashed: `<table class="w-full text-left mb-8 border-collapse"><thead class="border-b-2 border-dashed ${c.border} ${c.main}"><tr><th class="py-3 px-2 uppercase text-xs font-black">Description</th><th class="py-3 px-2 text-center uppercase text-xs font-black">Qty</th><th class="py-3 px-2 text-right uppercase text-xs font-black">Price</th><th class="py-3 px-2 text-right uppercase text-xs font-black">Total</th></tr></thead><tbody>${tableItem(`border-b border-dashed ${c.border}`, 'py-3 px-2')}</tbody></table>`,
+            striped: `<table class="w-full text-left mb-8 border-collapse border-y-4 ${c.border}"><thead class="${c.main} bg-gray-50"><tr><th class="py-3 px-4 uppercase text-xs font-black">Description</th><th class="py-3 px-4 text-center uppercase text-xs font-black">Qty</th><th class="py-3 px-4 text-right uppercase text-xs font-black">Price</th><th class="py-3 px-4 text-right uppercase text-xs font-black">Total</th></tr></thead><tbody class="border-y ${c.border}">${tableItem('', 'py-3 px-4')}</tbody></table>`,
+            minimal: `<table class="w-full text-left mb-8 border-collapse"><thead class="border-b ${c.border}"><tr><th class="py-2 uppercase text-xs font-bold text-gray-500">Description</th><th class="py-2 text-center uppercase text-xs font-bold text-gray-500">Qty</th><th class="py-2 text-right uppercase text-xs font-bold text-gray-500">Price</th><th class="py-2 text-right uppercase text-xs font-bold text-gray-500">Total</th></tr></thead><tbody>${tableItem('border-b border-gray-100 hover:bg-gray-50', 'py-4')}</tbody></table>`
+        };
+
+        const pjk = meta.pajakRp ? `<div class="flex justify-between text-sm mb-2 text-gray-600"><span>Pajak</span><span>${rp(meta.pajakRp)}</span></div>` : '';
+        
+        // Final Output Gabungan UI 100% Dinamis
+        return `<style>@media print { @page { size: ${conf.o}; } }</style>
+        <div class="p-8 bg-white ${conf.f} text-gray-800 relative overflow-hidden" style="-webkit-print-color-adjust: exact; print-color-adjust: exact; min-height: 500px;">
+            ${headers[conf.h]}
+            
+            <div class="mb-8 p-4 border-l-4 ${c.border} ${c.light} w-full md:w-2/3 shadow-sm">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">Invoiced To:</p>
+                <h3 class="text-xl font-black uppercase ${c.main}">${dpNama}</h3>
+            </div>
+            
+            ${tables[conf.tb]}
+            
+            <div class="flex justify-end mt-8">
+                <div class="w-full sm:w-1/2 lg:w-2/5 p-6 rounded-xl border ${c.border} ${c.light} shadow-md">
+                    <div class="flex justify-between text-sm mb-2 font-bold text-gray-700"><span>Subtotal</span><span>${rp(subT)}</span></div>
+                    ${pjk}
+                    <div class="flex justify-between items-center border-t-2 pt-4 mt-2 ${c.border}">
+                        <span class="text-sm font-black uppercase tracking-widest ${c.accent}">Grand Total</span>
+                        <span class="text-2xl font-black ${c.main}">${rp(invoiceGrandTotal)}</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }
 
         const tablesHTML = [
             /* 0: Colored Head */ `<table class="w-full text-left mb-8 border-collapse"><thead><tr style="background-color: ${cMain} !important; color: white !important;"><th class="py-3 px-4 text-xs font-black uppercase rounded-tl-lg">Deskripsi Item</th><th class="py-3 px-4 text-xs font-black uppercase text-center">Qty</th><th class="py-3 px-4 text-xs font-black uppercase text-right">Harga Satuan</th><th class="py-3 px-4 text-xs font-black uppercase text-right rounded-tr-lg">Total</th></tr></thead><tbody class="divide-y" style="border-color: ${cBorder};">${renderTableItems('border-bottom: 1px solid '+cBorder+';', false)}</tbody></table>`,
