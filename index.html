@@ -1395,14 +1395,24 @@
         nav('arsip'); previewSuratJalan(targetId); api('saveTransaksi', payload);
     }
 
-    function renderArsip() {
+   function renderArsip() {
         const fDate = document.getElementById('filter-inv-tanggal').value; 
         const fDapurRaw = document.getElementById('filter-inv-dapur').value;
         const fPerusRaw = document.getElementById('filter-inv-perusahaan').value;
 
+        // BATASAN SUPER CEPAT: Default tampilkan hanya 30 hari terakhir
+        const d = new Date(); d.setDate(d.getDate() - 30);
+        const sebulanLalu = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+
         const filtered = dataTransaksi.filter(t => { 
             try {
                 const tDate = normalizeDate(t.tanggal); 
+                
+                // Jika filter tanggal kosong, buang data yang lebih tua dari 1 bulan
+                if(!fDate && tDate < sebulanLalu) return false;
+                // Jika user pilih tanggal spesifik
+                if(fDate && tDate !== fDate) return false; 
+                
                 const fDprStr = String(fDapurRaw).trim().toLowerCase();
                 const tDprStr1 = String(t.dapurId || '').trim().toLowerCase(); 
                 const tDprStr2 = String(t.idDapur || '').trim().toLowerCase();
@@ -1427,7 +1437,6 @@
                     matchPerus = (tPerusStr1 === fPerusStr) || (tPerusStr2 === fPerusStr) || prNama.includes(fPerusStr) || (fPerusText && fPerusText !== 'semua perusahaan' && prNama.includes(fPerusText));
                 }
 
-                if(fDate && tDate !== fDate) return false; 
                 if(fDprStr && !matchDpr) return false; 
                 if(fPerusStr && !matchPerus) return false;
                 return true; 
@@ -1444,7 +1453,7 @@
                 <button onclick="editTransaksi('${t.id}')" class="bg-indigo-600 text-white px-2.5 py-1.5 rounded-lg text-xs hover:bg-indigo-700 font-bold shadow-sm" title="Edit"><i class="fas fa-edit"></i></button>
                 <button onclick="delTransaksi('${t.id}')" class="bg-rose-600 text-white px-2.5 py-1.5 rounded-lg text-xs hover:bg-rose-700 font-bold shadow-sm" title="Hapus"><i class="fas fa-trash"></i></button>
             </td></tr>`;
-        }).join('') || `<tr><td colspan="6" class="text-center p-8 text-slate-400">Tidak ada arsip ditemukan</td></tr>`;
+        }).join('') || `<tr><td colspan="6" class="text-center p-8 text-slate-400">Pilih tanggal spesifik untuk melihat riwayat data lama</td></tr>`;
     }
 
     function delTransaksi(id) { showConfirm('Hapus Invoice', 'Hapus invoice ini secara permanen?', 'danger', 'Ya, Hapus', () => { dataTransaksi = dataTransaksi.filter(t => t.id !== id); saveLocalCache(); renderArsip(); toast('Invoice dihapus'); api('delTransaksi', {id}); }); }
@@ -1781,12 +1790,26 @@
         if(isFinancialUnlocked) { lockedView.style.display = 'none'; contentView.classList.remove('hidden'); } 
         else { lockedView.style.display = 'block'; contentView.classList.add('hidden'); return; }
 
-        const start = document.getElementById('filter-lap-start').value; const end = document.getElementById('filter-lap-end').value; const fDapurRaw = document.getElementById('filter-lap-dapur').value; const fPerusRaw = document.getElementById('filter-lap-perusahaan').value; const cari = document.getElementById('filter-lap-cari').value.toLowerCase();
+        const start = document.getElementById('filter-lap-start').value; 
+        const end = document.getElementById('filter-lap-end').value; 
+        const fDapurRaw = document.getElementById('filter-lap-dapur').value; 
+        const fPerusRaw = document.getElementById('filter-lap-perusahaan').value; 
+        const cari = document.getElementById('filter-lap-cari').value.toLowerCase();
+        
         let allItems = [], toOps=0, toBersih=0, toKotor=0;
+
+        // BATASAN SUPER CEPAT: Default tampilkan hanya 30 hari terakhir jika user tidak mengisi "Dari Tanggal"
+        const d = new Date(); d.setDate(d.getDate() - 30);
+        const sebulanLalu = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const effectiveStart = start ? start : sebulanLalu;
         
         dataTransaksi.forEach(t => {
             const tDate = normalizeDate(t.tanggal);
-            if(start && tDate < start) return; if(end && tDate > end) return;
+            
+            // Logika anti-lag, cut data lama
+            if(tDate < effectiveStart) return; 
+            if(end && tDate > end) return;
+            
             const tDpr = t.dapurId || t.idDapur || ''; const tPrs = t.perusId || t.idPerusahaan || '';
             if(fDapurRaw && tDpr !== fDapurRaw) return; if(fPerusRaw && tPrs !== fPerusRaw) return;
             
@@ -1810,19 +1833,29 @@
             if (d.isBeban) return `<tr class="bg-rose-50/60"><td class="p-3.5"><div class="font-bold">${formatDate(d.tgl)}</div><div class="text-[10px] text-slate-400">${d.inv}</div></td><td class="p-3.5"><div class="font-extrabold text-rose-600">${d.nama}</div><div class="text-[10px] font-bold text-indigo-500 uppercase">${d.dapur}</div></td><td colspan="5" class="p-3.5 text-center text-slate-300">-</td><td class="p-3.5 font-extrabold text-rose-600">${rp(d.bersih)}</td><td class="p-3.5 text-center"><span class="text-rose-600 font-bold bg-rose-100 px-2 py-0.5 rounded text-[10px]">Beban</span></td></tr>`;
             const statusHtml = d.bersih >= 0 ? `<span class="text-emerald-700 font-bold bg-emerald-100 px-2.5 py-1 rounded-lg text-[11px]">Untung</span>` : `<span class="text-rose-600 font-bold bg-rose-100 px-2.5 py-1 rounded-lg text-[11px]">Rugi</span>`;
             return `<tr class="hover:bg-indigo-50/30"><td class="p-3.5"><div class="font-bold text-slate-800">${formatDate(d.tgl)}</div><div class="text-[10px] text-slate-400">${d.inv}</div></td><td class="p-3.5"><div class="font-bold text-slate-800">${d.nama}</div><div class="text-[10px] font-bold text-indigo-500 uppercase">${d.dapur}</div></td><td class="p-3.5 text-center font-bold">${d.qty} ${d.satuan||''}</td><td class="p-3.5">${rp(d.beli)}</td><td class="p-3.5">${rp(d.jual)}</td><td class="p-3.5 text-center"><div class="font-bold">${d.opsPersen}%</div><div class="text-[10px] text-rose-500">-${rp(d.ops)}</div></td><td class="p-3.5 font-semibold">${rp(d.kotor)}</td><td class="p-3.5 font-extrabold text-indigo-600">${rp(d.bersih)}</td><td class="p-3.5 text-center">${statusHtml}</td></tr>`;
-        }).join('') || `<tr><td colspan="9" class="text-center p-8 text-slate-400">Tidak ada data transaksi</td></tr>`;
+        }).join('') || `<tr><td colspan="9" class="text-center p-8 text-slate-400">Pilih rentang tanggal khusus untuk melihat data lebih dari 1 bulan lalu</td></tr>`;
         
         document.getElementById('lap-tot-ops').innerText = rp(toOps); document.getElementById('lap-tot-bersih').innerText = rp(toBersih);
         document.getElementById('table-laporan-foot').innerHTML = `<tr><td colspan="6" class="p-3.5 text-right font-black uppercase">Total Keseluruhan</td><td class="p-3.5 font-black">${rp(toKotor)}</td><td class="p-3.5 font-black text-indigo-600">${rp(toBersih)}</td><td></td></tr>`;
     }
-
     function renderLaporanDapur() {
-        const start = document.getElementById('filter-lapdapur-start').value; const end = document.getElementById('filter-lapdapur-end').value; const fDapurRaw = document.getElementById('filter-lapdapur-id').value;
+        const start = document.getElementById('filter-lapdapur-start').value; 
+        const end = document.getElementById('filter-lapdapur-end').value; 
+        const fDapurRaw = document.getElementById('filter-lapdapur-id').value;
+        
         let allItems = [], toOpsTotal = 0;
+
+        // BATASAN SUPER CEPAT: Default tampilkan hanya 30 hari terakhir
+        const d = new Date(); d.setDate(d.getDate() - 30);
+        const sebulanLalu = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const effectiveStart = start ? start : sebulanLalu;
         
         dataTransaksi.forEach(t => {
             const tDate = normalizeDate(t.tanggal);
-            if(start && tDate < start) return; if(end && tDate > end) return;
+            
+            if(tDate < effectiveStart) return; 
+            if(end && tDate > end) return;
+            
             const tDpr = t.dapurId || t.idDapur || '';
             if(fDapurRaw && tDpr !== fDapurRaw) return;
             
@@ -1841,10 +1874,10 @@
         document.getElementById('table-laporan-dapur-body').innerHTML = allItems.map(d => {
             if(d.isBeban) return `<tr class="bg-amber-50/50"><td class="p-3.5"><div class="font-bold">${formatDate(d.tgl)}</div><div class="text-[10px] text-slate-400">${d.inv}</div></td><td class="p-3.5 font-bold uppercase">${d.dapur}</td><td class="p-3.5 text-amber-700 font-extrabold">${d.nama}</td><td colspan="4" class="p-3.5 text-center">-</td><td class="p-3.5 font-extrabold text-rose-500">${rp(d.ops)}</td></tr>`;
             return `<tr class="hover:bg-indigo-50/30"><td class="p-3.5"><div class="font-bold text-slate-800">${formatDate(d.tgl)}</div><div class="text-[10px] text-slate-400">${d.inv}</div></td><td class="p-3.5 font-bold text-slate-800 uppercase">${d.dapur}</td><td class="p-3.5 font-semibold">${d.nama}</td><td class="p-3.5 text-center font-bold">${d.qty} ${d.satuan||''}</td><td class="p-3.5">${rp(d.beli)}</td><td class="p-3.5">${rp(d.jual)}</td><td class="p-3.5 text-center font-bold">${d.opsPersen}%</td><td class="p-3.5 font-extrabold text-rose-500">${rp(d.ops)}</td></tr>`;
-        }).join('') || `<tr><td colspan="8" class="text-center p-8 text-slate-400">Tidak ada data operasional dapur</td></tr>`;
+        }).join('') || `<tr><td colspan="8" class="text-center p-8 text-slate-400">Gunakan filter tanggal untuk melihat data operasional lama</td></tr>`;
+        
         document.getElementById('table-laporan-dapur-foot').innerHTML = `<tr><td colspan="7" class="p-3.5 text-right font-black uppercase">Total Biaya Operasional</td><td class="p-3.5 font-black text-rose-500">${rp(toOpsTotal)}</td></tr>`;
     }
-
     function renderBukuKas() {
         const start = document.getElementById('filter-kas-start').value; const end = document.getElementById('filter-kas-end').value; const fJenis = document.getElementById('filter-kas-jenis').value;
         let totMasuk = 0, totKeluar = 0, filtered = [];
