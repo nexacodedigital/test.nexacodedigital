@@ -1103,9 +1103,11 @@
     }
 
     function nav(pageId) {
+        // Cegah render ulang dan lag kalau lu kepencet menu yang sama berkali-kali
+        if (activePage === pageId) return; 
         activePage = pageId;
         
-        // 1. PINDAH HALAMAN SECARA INSTAN (0 Detik)
+        // 1. PINDAH HALAMAN SECARA INSTAN UI/UX-nya (0 Detik)
         document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         
@@ -1122,12 +1124,23 @@
             document.getElementById('sidebar').classList.add('-translate-x-full');
             document.getElementById('sidebar-backdrop').classList.remove('active');
         }
+
+        // 2. TRIK PEMBERSIH RAM: Kosongkan tabel di halaman yang GAK AKTIF
+        // Ini yang bikin aplikasi lu jadi super enteng karena DOM HTML yang gak kelihatan langsung dihapus dari memori.
+        const tableBodies = ['table-barang-body', 'table-dapur-body', 'table-perusahaan-body', 'table-arsip-body', 'table-laporan-body', 'table-laporan-dapur-body', 'table-pengeluaran-body'];
+        tableBodies.forEach(id => {
+            const el = document.getElementById(id);
+            // Kalau tabelnya gak ada di halaman yang baru dibuka, kosongkan isinya!
+            if(el && !target.contains(el)) el.innerHTML = ''; 
+        });
         
-        // 2. TRIK ANTI LAG: Beri jeda 10 milidetik agar animasi klik menu selesai duluan, 
-        // baru datanya diproses di background tanpa menghentikan layar.
-        setTimeout(() => {
-            renderActivePageOnly();
-        }, 10);
+        // 3. TRIK ANTI LAG: Paksa browser nampilin animasi pindah halaman DULUAN secara mulus, 
+        // baru ngerender/nge-load data tabel yang berat di frame berikutnya.
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                renderActivePageOnly();
+            });
+        });
     }
     function toggleSidebar() {
         const sb = document.getElementById('sidebar');
