@@ -480,6 +480,7 @@
                         <div class="flex flex-col md:flex-row gap-4 mb-6 items-end">
                             <div><label class="text-xs font-semibold text-gray-500 mb-1 block">Filter Tanggal</label><input type="date" id="filter-inv-tanggal" class="input-outline w-48" onchange="renderArsip()"></div>
                             <div><label class="text-xs font-semibold text-gray-500 mb-1 block">Filter Dapur</label><select id="filter-inv-dapur" class="input-outline w-48" onchange="renderArsip()"><option value="">Semua Dapur</option></select></div>
+                            <div><label class="text-xs font-semibold text-gray-500 mb-1 block">Filter Perusahaan</label><select id="filter-inv-perusahaan" class="input-outline w-48" onchange="renderArsip()"><option value="">Semua Perusahaan</option></select></div>
                         </div>
                         <div class="overflow-x-auto border rounded-xl" id="arsip-table-wrapper">
                             <table class="w-full text-left text-sm whitespace-nowrap">
@@ -1067,6 +1068,7 @@ function renderKasirList(filterText) {
         document.getElementById('kasir-perusahaan').innerHTML = buildOpts(dataPerusahaan, 'id', 'nama');
         
         document.getElementById('filter-inv-dapur').innerHTML = dapurOptsFilter;
+        document.getElementById('filter-inv-perusahaan').innerHTML = perusOptsFilter;
         document.getElementById('filter-lap-dapur').innerHTML = dapurOptsFilter;
         document.getElementById('filter-lap-perusahaan').innerHTML = perusOptsFilter;
         document.getElementById('filter-lapdapur-id').innerHTML = dapurOptsFilter;
@@ -1294,19 +1296,45 @@ function renderKasirList(filterText) {
     }
 
     function renderArsip() {
-        const fDate = document.getElementById('filter-inv-tanggal').value; const fDapurRaw = document.getElementById('filter-inv-dapur').value;
+        const fDate = document.getElementById('filter-inv-tanggal').value; 
+        const fDapurRaw = document.getElementById('filter-inv-dapur').value;
+        const fPerusRaw = document.getElementById('filter-inv-perusahaan').value; // Ambil nilai filter perusahaan
+
         const filtered = dataTransaksi.filter(t => { 
             try {
-                const tDate = normalizeDate(t.tanggal); const fDprStr = String(fDapurRaw).trim().toLowerCase();
-                const tDprStr1 = String(t.dapurId || '').trim().toLowerCase(); const tDprStr2 = String(t.idDapur || '').trim().toLowerCase();
-                const dpObj = dataDapur.find(x => String(x.id).toLowerCase() === tDprStr1 || String(x.id).toLowerCase() === tDprStr2); const dpNama = (dpObj ? dpObj.nama : (t.dapurId || t.idDapur || '-')).toLowerCase();
+                const tDate = normalizeDate(t.tanggal); 
+                const fDprStr = String(fDapurRaw).trim().toLowerCase();
+                const tDprStr1 = String(t.dapurId || '').trim().toLowerCase(); 
+                const tDprStr2 = String(t.idDapur || '').trim().toLowerCase();
+                const dpObj = dataDapur.find(x => String(x.id).toLowerCase() === tDprStr1 || String(x.id).toLowerCase() === tDprStr2); 
+                const dpNama = (dpObj ? dpObj.nama : (t.dapurId || t.idDapur || '-')).toLowerCase();
+                
                 let matchDpr = true;
                 if(fDprStr && fDprStr !== "") {
                     const selectEl = document.getElementById('filter-inv-dapur'); let fDprText = ""; if(selectEl.selectedIndex >= 0) fDprText = selectEl.options[selectEl.selectedIndex].text.toLowerCase();
                     matchDpr = (tDprStr1 === fDprStr) || (tDprStr2 === fDprStr) || (dpNama === fDprStr) || dpNama.includes(fDprStr);
                     if(!matchDpr && fDprText && fDprText !== '-- pilih --' && fDprText !== 'semua dapur') matchDpr = (dpNama === fDprText) || dpNama.includes(fDprText);
                 }
-                if(fDate && tDate !== fDate) return false; if(fDprStr && fDprStr !== "" && !matchDpr) return false; return true; 
+
+                // Sistem filter perusahaan
+                const fPerusStr = String(fPerusRaw).trim().toLowerCase();
+                const tPerusStr1 = String(t.perusId || '').trim().toLowerCase();
+                const tPerusStr2 = String(t.idPerusahaan || '').trim().toLowerCase();
+                const prObj = dataPerusahaan.find(x => String(x.id).toLowerCase() === tPerusStr1 || String(x.id).toLowerCase() === tPerusStr2);
+                const prNama = (prObj ? prObj.nama : (t.perusId || t.idPerusahaan || '-')).toLowerCase();
+                
+                let matchPerus = true;
+                if(fPerusStr && fPerusStr !== "") {
+                    const selectEl = document.getElementById('filter-inv-perusahaan'); let fPerusText = ""; if(selectEl.selectedIndex >= 0) fPerusText = selectEl.options[selectEl.selectedIndex].text.toLowerCase();
+                    matchPerus = (tPerusStr1 === fPerusStr) || (tPerusStr2 === fPerusStr) || (prNama === fPerusStr) || prNama.includes(fPerusStr);
+                    if(!matchPerus && fPerusText && fPerusText !== '-- pilih --' && fPerusText !== 'semua perusahaan') matchPerus = (prNama === fPerusText) || prNama.includes(fPerusText);
+                }
+
+                if(fDate && tDate !== fDate) return false; 
+                if(fDprStr && fDprStr !== "" && !matchDpr) return false; 
+                if(fPerusStr && fPerusStr !== "" && !matchPerus) return false; // Buang data yang gak cocok dengan perusahaan
+                
+                return true; 
             } catch(e) { return true; }
         }).reverse();
         
@@ -1322,7 +1350,6 @@ function renderKasirList(filterText) {
             </td></tr>`;
         }).join('') || `<tr><td colspan="6" class="text-center p-6 text-gray-400">Tidak ada arsip ditemukan</td></tr>`;
     }
-
     function delTransaksi(id) { showConfirm('Hapus Invoice', 'Yakin ingin menghapus invoice ini secara permanen?', 'danger', 'Ya, Hapus', () => { dataTransaksi = dataTransaksi.filter(t => t.id !== id); renderArsip(); updateAllViews(); showAlert('Berhasil', 'Invoice berhasil dihapus secara permanen.'); api('delTransaksi', {id}); }); }
 
     function editTransaksi(id) {
