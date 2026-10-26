@@ -1400,17 +1400,13 @@
         const fDapurRaw = document.getElementById('filter-inv-dapur').value;
         const fPerusRaw = document.getElementById('filter-inv-perusahaan').value;
 
-        // BATASAN SUPER CEPAT: Default tampilkan hanya 30 hari terakhir
         const d = new Date(); d.setDate(d.getDate() - 30);
         const sebulanLalu = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 
         const filtered = dataTransaksi.filter(t => { 
             try {
                 const tDate = normalizeDate(t.tanggal); 
-                
-                // Jika filter tanggal kosong, buang data yang lebih tua dari 1 bulan
                 if(!fDate && tDate < sebulanLalu) return false;
-                // Jika user pilih tanggal spesifik
                 if(fDate && tDate !== fDate) return false; 
                 
                 const fDprStr = String(fDapurRaw).trim().toLowerCase();
@@ -1441,7 +1437,14 @@
                 if(fPerusStr && !matchPerus) return false;
                 return true; 
             } catch(e) { return true; }
-        }).slice().reverse();
+        }).sort((a, b) => {
+            // PERBAIKAN: Mengurutkan ketat berdasarkan TANGGAL, bukan urutan input
+            const dateA = normalizeDate(a.tanggal);
+            const dateB = normalizeDate(b.tanggal);
+            if (dateA !== dateB) return dateA < dateB ? 1 : -1;
+            // Jika di tanggal yang sama, urutkan dari ID terbaru
+            return a.id < b.id ? 1 : -1; 
+        });
         
         document.getElementById('table-arsip-body').innerHTML = filtered.map(t => {
             const dp = dataDapur.find(x=>x.id===(t.dapurId || t.idDapur))?.nama || t.dapurId || t.idDapur || '-'; 
@@ -1455,7 +1458,6 @@
             </td></tr>`;
         }).join('') || `<tr><td colspan="6" class="text-center p-8 text-slate-400">Pilih tanggal spesifik untuk melihat riwayat data lama</td></tr>`;
     }
-
     function delTransaksi(id) { showConfirm('Hapus Invoice', 'Hapus invoice ini secara permanen?', 'danger', 'Ya, Hapus', () => { dataTransaksi = dataTransaksi.filter(t => t.id !== id); saveLocalCache(); renderArsip(); toast('Invoice dihapus'); api('delTransaksi', {id}); }); }
 
     function editTransaksi(id) {
@@ -1785,7 +1787,7 @@
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
     function openModal(id) { document.getElementById(id).classList.add('active'); }
 
-    function renderLaporanLengkap() {
+   function renderLaporanLengkap() {
         const lockedView = document.getElementById('laporan-lengkap-locked'); const contentView = document.getElementById('laporan-lengkap-content');
         if(isFinancialUnlocked) { lockedView.style.display = 'none'; contentView.classList.remove('hidden'); } 
         else { lockedView.style.display = 'block'; contentView.classList.add('hidden'); return; }
@@ -1798,7 +1800,6 @@
         
         let allItems = [], toOps=0, toBersih=0, toKotor=0;
 
-        // BATASAN SUPER CEPAT: Default tampilkan hanya 30 hari terakhir jika user tidak mengisi "Dari Tanggal"
         const d = new Date(); d.setDate(d.getDate() - 30);
         const sebulanLalu = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         const effectiveStart = start ? start : sebulanLalu;
@@ -1806,7 +1807,6 @@
         dataTransaksi.forEach(t => {
             const tDate = normalizeDate(t.tanggal);
             
-            // Logika anti-lag, cut data lama
             if(tDate < effectiveStart) return; 
             if(end && tDate > end) return;
             
@@ -1829,6 +1829,14 @@
             }
         });
         
+        // PERBAIKAN: Urutkan laporan berdasarkan tanggal berjalan
+        allItems.sort((a, b) => {
+            const dateA = normalizeDate(a.tgl);
+            const dateB = normalizeDate(b.tgl);
+            if (dateA !== dateB) return dateA < dateB ? 1 : -1;
+            return a.inv < b.inv ? 1 : -1; 
+        });
+
         document.getElementById('table-laporan-body').innerHTML = allItems.map(d => {
             if (d.isBeban) return `<tr class="bg-rose-50/60"><td class="p-3.5"><div class="font-bold">${formatDate(d.tgl)}</div><div class="text-[10px] text-slate-400">${d.inv}</div></td><td class="p-3.5"><div class="font-extrabold text-rose-600">${d.nama}</div><div class="text-[10px] font-bold text-indigo-500 uppercase">${d.dapur}</div></td><td colspan="5" class="p-3.5 text-center text-slate-300">-</td><td class="p-3.5 font-extrabold text-rose-600">${rp(d.bersih)}</td><td class="p-3.5 text-center"><span class="text-rose-600 font-bold bg-rose-100 px-2 py-0.5 rounded text-[10px]">Beban</span></td></tr>`;
             const statusHtml = d.bersih >= 0 ? `<span class="text-emerald-700 font-bold bg-emerald-100 px-2.5 py-1 rounded-lg text-[11px]">Untung</span>` : `<span class="text-rose-600 font-bold bg-rose-100 px-2.5 py-1 rounded-lg text-[11px]">Rugi</span>`;
@@ -1845,7 +1853,6 @@
         
         let allItems = [], toOpsTotal = 0;
 
-        // BATASAN SUPER CEPAT: Default tampilkan hanya 30 hari terakhir
         const d = new Date(); d.setDate(d.getDate() - 30);
         const sebulanLalu = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         const effectiveStart = start ? start : sebulanLalu;
@@ -1871,6 +1878,14 @@
             }
         });
         
+        // PERBAIKAN: Urutkan laporan dapur berdasarkan tanggal berjalan
+        allItems.sort((a, b) => {
+            const dateA = normalizeDate(a.tgl);
+            const dateB = normalizeDate(b.tgl);
+            if (dateA !== dateB) return dateA < dateB ? 1 : -1;
+            return a.inv < b.inv ? 1 : -1; 
+        });
+
         document.getElementById('table-laporan-dapur-body').innerHTML = allItems.map(d => {
             if(d.isBeban) return `<tr class="bg-amber-50/50"><td class="p-3.5"><div class="font-bold">${formatDate(d.tgl)}</div><div class="text-[10px] text-slate-400">${d.inv}</div></td><td class="p-3.5 font-bold uppercase">${d.dapur}</td><td class="p-3.5 text-amber-700 font-extrabold">${d.nama}</td><td colspan="4" class="p-3.5 text-center">-</td><td class="p-3.5 font-extrabold text-rose-500">${rp(d.ops)}</td></tr>`;
             return `<tr class="hover:bg-indigo-50/30"><td class="p-3.5"><div class="font-bold text-slate-800">${formatDate(d.tgl)}</div><div class="text-[10px] text-slate-400">${d.inv}</div></td><td class="p-3.5 font-bold text-slate-800 uppercase">${d.dapur}</td><td class="p-3.5 font-semibold">${d.nama}</td><td class="p-3.5 text-center font-bold">${d.qty} ${d.satuan||''}</td><td class="p-3.5">${rp(d.beli)}</td><td class="p-3.5">${rp(d.jual)}</td><td class="p-3.5 text-center font-bold">${d.opsPersen}%</td><td class="p-3.5 font-extrabold text-rose-500">${rp(d.ops)}</td></tr>`;
