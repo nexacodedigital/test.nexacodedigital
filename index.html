@@ -2762,18 +2762,6 @@ let isGasReady = true;
        let dbSettings = { logo: 'https://iili.io/ndS44YG.md.png', landingTitle: 'Platform Belajar Online <br><span class="text-brand-orange">Masa Depan</span>', landingDesc: 'Lolos PTN impian dengan sistem CBT IRT paling akurat, Kelas Online interaktif, dan modul Bank Soal terlengkap se-Indonesia.', footerText: '© 2026 Belajar Bareng Edutech. Semua Hak Cipta Dilindungi.', ytImg: 'https://via.placeholder.com/800x200/071B3A/FFFFFF?text=Youtube+Banner', ytLink: 'https://youtube.com' };
 
         window.isCbtActive = false;
-
-        if (IS_PREVIEW && dbModules.length === 0) {
-            dbModules.push({ id: 'M1', moduleCode: 'PU-01', program: 'UTBK SNBT', episode: 'Episode 1', subtest: 'Penalaran Umum', duration: 15, questions: [ { qCode: 'Q-01', type: 'PG', cog: 'C3', text: 'Semua siswa yang rajin belajar akan lulus ujian. Budi adalah siswa yang rajin belajar. Kesimpulan yang tepat adalah...', img: '', ans: 'A', options: ['Budi akan lulus ujian.', 'Budi mungkin tidak lulus ujian.', 'Budi malas belajar.', 'Semua yang lulus ujian adalah Budi.', 'Tidak dapat disimpulkan.'], discuss: 'Silogisme Modus Ponens: P -> Q, P, maka Q.' }, { qCode: 'Q-02', type: 'PG', cog: 'C4', text: 'Berdasarkan grafik di atas, jika tren berlanjut, berapakah perkiraan pada bulan ke-5?', img: 'https://placehold.co/400x200?text=Grafik', ans: 'C', options: ['10', '20', '30', '40', '50'], discuss: 'Pola naik konstan +10 tiap bulan.' } ] });
-            dbModules.push({ id: 'M2', moduleCode: 'PK-01', program: 'UTBK SNBT', episode: 'Episode 1', subtest: 'Kemampuan Kuantitatif', duration: 20, questions: [ { qCode: 'Q-03', type: 'ISIAN', cog: 'C4', text: 'Jika $x^2 - 4x + 4 = 0$, maka nilai $x$ adalah...', img: '', ans: '2', options: [], discuss: '$(x-2)^2 = 0$, maka $x = 2$.' }, { qCode: 'Q-04', type: 'PG', cog: 'C5', text: 'Manakah dari bilangan berikut yang habis dibagi 3?', img: '', ans: 'D', options: ['124', '125', '126', '127', '128'], discuss: 'Jumlah digit 1+2+6 = 9 (habis dibagi 3).' } ] });
-            
-            const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-            dbTryouts.push({ id: 'TO1', program: 'UTBK SNBT', episode: 'Episode 1', modules: ['M1', 'M2'], img: 'https://placehold.co/400x200/071B3A/FFFFFF?text=SNBT+Eps+1', start: new Date().toISOString(), end: tomorrow.toISOString(), relScore: new Date().toISOString(), type: 'FREE' });
-            
-            dbPtn.push({ univ: 'Institut Teknologi Bandung', prodi: 'Fakultas Teknologi Industri', daya: 120, peminat: 2500 });
-            dbPtn.push({ univ: 'Universitas Indonesia', prodi: 'Pendidikan Dokter', daya: 80, peminat: 4000 });
-        }
-
         function showToast(msg, type='info') { const cont = document.getElementById('toast-container'); const t = document.createElement('div'); t.className = `p-4 rounded-xl shadow-lg text-white font-bold text-sm flex items-center transform transition-all duration-300 translate-y-10 opacity-0 ${type==='success'?'bg-green-500':type==='error'?'bg-red-500':'bg-blue-500'}`; t.innerHTML = `<i class="fa-solid ${type==='success'?'fa-check-circle':type==='error'?'fa-triangle-exclamation':'fa-info-circle'} mr-2"></i> ${msg}`; cont.appendChild(t); setTimeout(()=>{t.classList.remove('translate-y-10','opacity-0');}, 10); setTimeout(()=>{t.classList.add('translate-y-10','opacity-0'); setTimeout(()=>t.remove(), 300);}, 3000); }
         function showModal(title, desc, type='info', customHtml='') { 
             const modal = document.getElementById('custom-modal'); 
