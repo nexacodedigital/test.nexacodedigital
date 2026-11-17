@@ -51,10 +51,16 @@
         const db = getFirestore(app);
         const googleProvider = new GoogleAuthProvider();
 
+        // Ekspos Auth & Firestore ke Global Window
         window.firebaseAuth = auth;
         window.firebaseDb = db;
         window.googleProvider = googleProvider;
         window.signInWithPopup = signInWithPopup;
+        window.fsDoc = doc;
+        window.fsSetDoc = setDoc;
+        window.fsGetDoc = getDoc;
+        window.fsCollection = collection;
+        window.fsGetDocs = getDocs;
     </script>
     <script>
         window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }, svg: { fontCache: 'global' } };
@@ -2685,19 +2691,13 @@
           </div>
       </div>
 
-    <!-- Firebase SDK Setup Placeholder -->
-    <!-- <script type="module">
-        // Import the functions you need from the SDKs you need
-        // import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        // import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        // ...
-    </script> -->
-
     <script>
-        const USE_GAS_DATABASE = true; 
-        const GAS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNpfrnemK7hr8lg1nNtkQ05ybTjbzDMfx4JHcnGSXNuU9mDpnFTX8VisdhWVLCwUfbeg/exec";
-        let isGasReady = true; 
-        const IS_PREVIEW = true; 
+        const USE_FIREBASE_DB = true;
+// URL GAS tetap dipertahankan KHUSUS untuk sinkronisasi Kelas OMS & layanan Email OTP
+const OMS_GAS_URL = "https://script.google.com/macros/s/AKfycbyNpfrnemK7hr8lg1nNtkQ05ybTjbzDMfx4JHcnGSXNuU9mDpnFTX8VisdhWVLCwUfbeg/exec";
+const GAS_SCRIPT_URL = OMS_GAS_URL; 
+const USE_GAS_DATABASE = true; 
+let isGasReady = true;
 
         // =========================================================================
     // [LANGKAH 3] TAMBAHKAN FUNGSI GOOGLE LOGIN DI SINI
@@ -2802,30 +2802,42 @@
             } 
             modal.classList.remove('hidden'); 
         }
-        function pushToGAS(tableName, payload) {
-            if(!GAS_SCRIPT_URL || !GAS_SCRIPT_URL.startsWith('http')) return;
-            
-            return fetch(GAS_SCRIPT_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8',
-                },
-                body: JSON.stringify({ action: 'saveData', table: tableName, payload: payload })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.status === 'error') {
-                    console.error("Server GAS Error (" + tableName + "):", data.message);
-                    showToast('Gagal menyimpan ke server: ' + data.message, 'error');
-                } else {
-                    console.log("Data " + tableName + " berhasil tersimpan permanen di Spreadsheet.");
-                }
-            })
-            .catch(e => {
-                console.error("Gagal sinkronisasi " + tableName + ":", e);
-            });
-        }
+        async function pushToFirebase(tableName, payload) {
+    // Tunggu hingga SDK Firebase siap
+    let retries = 0;
+    while (!window.firebaseDb && retries < 20) {
+        await new Promise(r => setTimeout(r, 150));
+        retries++;
+    }
+    if (!window.firebaseDb) {
+        console.error("Firebase belum siap.");
+        return;
+    }
 
+    try {
+        // Simpan ke koleksi 'prime_database' dengan dokumen sesuai nama tabel
+        // Serialisasi JSON digunakan agar array bersarang (seperti questions & ansMap) aman di Firestore
+        await window.fsSetDoc(window.fsDoc(window.firebaseDb, "prime_database", tableName), {
+            payload: JSON.stringify(payload),
+            updatedAt: new Date().toISOString()
+        });
+        console.log("Data " + tableName + " berhasil tersimpan di Firebase Firestore.");
+
+        // KHUSUS TABEL CLASSES: Tetap kirim update (Materi PDF, Recording, Rating Siswa) ke OMS!
+        if (tableName === 'Classes' && OMS_GAS_URL) {
+            fetch(OMS_GAS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'saveData', table: 'Classes', payload: payload })
+            }).catch(err => console.warn("Sinkronisasi Classes ke OMS tertunda:", err));
+        }
+    } catch (e) {
+        console.error("Gagal menyimpan " + tableName + " ke Firebase:", e);
+        showToast("Gagal menyimpan ke Firebase: " + e.message, "error");
+    }
+}
+// Buat alias agar pemanggilan pushToGAS lama tetap berjalan tanpa error
+window.pushToGAS = pushToFirebase;
         function downloadLocalDB() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(localStorage.getItem('bb_db'));
             const downloadAnchorNode = document.createElement('a');
@@ -2976,53 +2988,136 @@
             }
         });
         async function fetchAllFromGAS() {
-            if(!USE_GAS_DATABASE || !GAS_SCRIPT_URL || !GAS_SCRIPT_URL.startsWith('http')) return;
-            try {
-                const tables = ["Users", "Master", "Modules", "Tryouts", "Results", "Classes", "PTN", "Articles", "Settings"];
-                const fetchPromises = tables.map(table => 
-                    fetch(`${GAS_SCRIPT_URL}?action=getData&table=${table}&t=${Date.now()}`).then(res => res.json()).catch(e => { return null; })
-                );
-                const results = await Promise.all(fetchPromises);
-                
-                tables.forEach((table, index) => {
-                    const json = results[index];
-                    // PERBAIKAN: Gunakan Array.isArray(json) agar saat database kosong ([]), data lokal ikut dikosongkan!
-                    if (Array.isArray(json)) {
-                        if(table === "Users" && json.length > 0) dbUsers = json.map(u => ({...u, targetPtn: typeof u.targetPtn === 'string' && (u.targetPtn.startsWith('{') || u.targetPtn.startsWith('[')) ? JSON.parse(u.targetPtn) : u.targetPtn}));
-                        else if(table === "Modules") dbModules = json.map(m => ({...m, questions: typeof m.questions === 'string' ? JSON.parse(m.questions) : m.questions}));
-                        else if(table === "Tryouts") dbTryouts = json.map(t => ({...t, modules: typeof t.modules === 'string' ? JSON.parse(t.modules) : t.modules}));
-                        else if(table === "Results") dbResults = json.map(r => ({...r, ansMap: typeof r.ansMap === 'string' ? JSON.parse(r.ansMap) : r.ansMap, subtestScores: r.subtestScores ? (typeof r.subtestScores === 'string' ? JSON.parse(r.subtestScores) : r.subtestScores) : null}));
-                        else if(table === "Classes") {
-                            dbClasses = json
-                                .filter(c => c && c.id && String(c.title || '').trim() !== '')
-                                .map(c => ({
-                                    ...c,
-                                    ratings: typeof c.ratings === 'string' && c.ratings.trim().startsWith('[') ? JSON.parse(c.ratings) : (Array.isArray(c.ratings) ? c.ratings : [])
-                                }));
-                        }
-                        else if(table === "PTN" && json.length > 0) dbPtn = json; 
-                        else if(table === "Articles") dbArticles = json;
-                        else if(table === "Settings" && json.length > 0) dbSettings = json[0];
-                        else if(table === "Master" && json.length > 0) { 
-                            dbMaster.programs = JSON.parse(json[0].programs); 
-                            dbMaster.episodes = JSON.parse(json[0].episodes); 
-                            dbMaster.subtests = JSON.parse(json[0].subtests); 
-                        }
+    // Pastikan SDK Firebase sudah dimuat oleh browser
+    let retries = 0;
+    while (!window.firebaseDb && retries < 30) {
+        await new Promise(r => setTimeout(r, 150));
+        retries++;
+    }
+    if (!window.firebaseDb) return;
+
+    try {
+        const tables = ["Users", "Master", "Modules", "Tryouts", "Results", "Classes", "PTN", "Articles", "Settings"];
+
+        const fetchPromises = tables.map(async (table) => {
+            // 1. KHUSUS TABEL CLASSES (TERINTEGRASI OMS):
+            // Tarik jadwal terbaru dari OMS terlebih dahulu agar jadwal yang dibuat di OMS selalu masuk ke Prime
+            if (table === "Classes" && OMS_GAS_URL) {
+                try {
+                    const omsRes = await fetch(`${OMS_GAS_URL}?action=getData&table=Classes&t=${Date.now()}`);
+                    const omsJson = await omsRes.json();
+                    if (Array.isArray(omsJson) && omsJson.length > 0) {
+                        // Backup otomatis data kelas dari OMS ke Firebase
+                        await window.fsSetDoc(window.fsDoc(window.firebaseDb, "prime_database", "Classes"), {
+                            payload: JSON.stringify(omsJson),
+                            updatedAt: new Date().toISOString()
+                        });
+                        return omsJson;
                     }
-                });
+                } catch (omsErr) {
+                    console.warn("Mengambil cadangan Classes dari Firebase...", omsErr);
+                }
+            }
 
-                // Simpan hasil sinkronisasi terbaru ke localStorage agar data hantu (cache lama) hilang
-                localStorage.setItem('bb_db', JSON.stringify({
-                    dbUsers, dbMaster, dbModules, dbTryouts, dbResults, dbClasses, dbPtn, dbArticles, dbSettings
-                }));
+            // 2. TARIK DATA DARI FIREBASE FIRESTORE
+            const snap = await window.fsGetDoc(window.fsDoc(window.firebaseDb, "prime_database", table));
+            if (snap.exists() && snap.data().payload) {
+                return JSON.parse(snap.data().payload);
+            }
 
-                isGasReady = true;
-            } catch(e) { 
-                console.error("Sync error:", e);
-                isGasReady = true; 
-            } 
-        }
+            // 3. AUTO-MIGRASI PERTAMA KALI:
+            // Jika di Firebase belum ada datanya, tarik dari GAS lama lalu simpan ke Firebase!
+            if (OMS_GAS_URL) {
+                try {
+                    const gasRes = await fetch(`${OMS_GAS_URL}?action=getData&table=${table}&t=${Date.now()}`);
+                    const gasJson = await gasRes.json();
+                    if (Array.isArray(gasJson) && gasJson.length > 0) {
+                        await window.fsSetDoc(window.fsDoc(window.firebaseDb, "prime_database", table), {
+                            payload: JSON.stringify(gasJson),
+                            updatedAt: new Date().toISOString()
+                        });
+                        console.log(`[Auto-Migrasi] Tabel ${table} berhasil dipindahkan ke Firebase!`);
+                        return gasJson;
+                    }
+                } catch (migErr) {
+                    return null;
+                }
+            }
+            return null;
+        });
 
+        const results = await Promise.all(fetchPromises);
+
+        tables.forEach((table, index) => {
+            const json = results[index];
+            if (Array.isArray(json)) {
+                if (table === "Users" && json.length > 0) dbUsers = json.map(u => ({...u, targetPtn: typeof u.targetPtn === 'string' && (u.targetPtn.startsWith('{') || u.targetPtn.startsWith('[')) ? JSON.parse(u.targetPtn) : u.targetPtn}));
+                else if (table === "Modules") dbModules = json.map(m => ({...m, questions: typeof m.questions === 'string' ? JSON.parse(m.questions) : m.questions}));
+                else if (table === "Tryouts") dbTryouts = json.map(t => ({...t, modules: typeof t.modules === 'string' ? JSON.parse(t.modules) : t.modules}));
+                else if (table === "Results") dbResults = json.map(r => ({...r, ansMap: typeof r.ansMap === 'string' ? JSON.parse(r.ansMap) : r.ansMap, subtestScores: r.subtestScores ? (typeof r.subtestScores === 'string' ? JSON.parse(r.subtestScores) : r.subtestScores) : null}));
+                else if (table === "Classes") {
+                    dbClasses = json
+                        .filter(c => c && c.id && String(c.title || '').trim() !== '')
+                        .map(c => ({
+                            ...c,
+                            ratings: typeof c.ratings === 'string' && c.ratings.trim().startsWith('[') ? JSON.parse(c.ratings) : (Array.isArray(c.ratings) ? c.ratings : [])
+                        }));
+                }
+                else if (table === "PTN" && json.length > 0) dbPtn = json;
+                else if (table === "Articles") dbArticles = json;
+                else if (table === "Settings" && json.length > 0) dbSettings = json[0];
+                else if (table === "Master" && json.length > 0) {
+                    dbMaster.programs = typeof json[0].programs === 'string' ? JSON.parse(json[0].programs) : json[0].programs;
+                    dbMaster.episodes = typeof json[0].episodes === 'string' ? JSON.parse(json[0].episodes) : json[0].episodes;
+                    dbMaster.subtests = typeof json[0].subtests === 'string' ? JSON.parse(json[0].subtests) : json[0].subtests;
+                }
+            }
+        });
+
+        localStorage.setItem('bb_db', JSON.stringify({
+            dbUsers, dbMaster, dbModules, dbTryouts, dbResults, dbClasses, dbPtn, dbArticles, dbSettings
+        }));
+
+        isGasReady = true;
+    } catch (e) {
+        console.error("Firebase Sync Error:", e);
+        isGasReady = true;
+    }
+}
+// =========================================================================
+// TEMPELKAN FUNGSI syncServerData INI TEPAT DI SINI (DI ATAS loadLocalDB)
+// =========================================================================
+window.syncServerData = function(changedTable = 'ALL') {
+    localStorage.setItem('bb_db', JSON.stringify({
+        dbUsers, dbMaster, dbModules, dbTryouts, dbResults, dbClasses, dbPtn, dbArticles, dbSettings
+    }));
+    if (currentUser) {
+        localStorage.setItem('bb_user', JSON.stringify(currentUser));
+    }
+    if (!USE_FIREBASE_DB || changedTable === 'NONE') return;
+
+    const tableMap = {
+        'Users': dbUsers,
+        'Master': [{
+            programs: JSON.stringify(dbMaster.programs),
+            episodes: JSON.stringify(dbMaster.episodes),
+            subtests: JSON.stringify(dbMaster.subtests)
+        }],
+        'Modules': dbModules,
+        'Tryouts': dbTryouts,
+        'Results': dbResults,
+        'Classes': dbClasses,
+        'PTN': dbPtn,
+        'Articles': dbArticles,
+        'Settings': [dbSettings]
+    };
+
+    if (changedTable === 'ALL') {
+        Object.keys(tableMap).forEach(tbl => pushToFirebase(tbl, tableMap[tbl]));
+    } else if (tableMap[changedTable]) {
+        pushToFirebase(changedTable, tableMap[changedTable]);
+    }
+};
         function loadLocalDB() {
             const saved = localStorage.getItem('bb_db');
             if(saved) {
